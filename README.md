@@ -86,6 +86,7 @@ public class SingletonWithRaceCondition {
 }
 ```
 
+**What is happening if two threads are calling getInstance()?**
 Now, What happens if 2 threads call this method at the same time, below is the timeline  
 When the process starts, lets assume t1 starts processing and t2 is waiting for thread scheduler to give a time slice  
 
@@ -105,6 +106,8 @@ When the process starts, lets assume t1 starts processing and t2 is waiting for 
 
 **How to Prevent?**  
 via Synchronization  
+
+> Synchronization prevents a block of code to be executed by more than one thread at the same time
 
 How does synchronization works under the hood?  
 - for any thread to get inside a method marked synchronized, it has to acquire key from a lock object
@@ -156,6 +159,31 @@ public class Person {
 - Locks are reentrant: When a thread holds a lock, it can enter a block synchronized on the lock it is holding.
 
 
+# Lock Hierarchy
+
+```bash
+                                        java.util.concurrent.locks.Lock(Interface) 
+                                                         |
+                  _______________________________________|_________________________________ 
+                 |                                       |                                 |
+                 |                                       |                                 |
+       Read Lock(static class)                 WriteLock (static class)          ReentrantLock(class)
+```
+```java
+public class ReentrantLock implements Lock, java.io.Serializable {}
+
+public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializable {
+  * public static class ReadLock implements Lock, java.io.Serializable {}
+  * public static class WriteLock implements Lock, java.io.Serializable {}
+}
+public class StampedLock implements java.io.Serializable {(Java 8)
+  * final class WriteLockView implements Lock {}
+  * final class ReadLockView implements Lock {}
+}
+```
+
+
+
 **Deadlock:**  
 A deadlock is a situation where a thread T1 holds a key needed by a Thread T2
                                      and T2 holds a key needed by  T1
@@ -177,6 +205,42 @@ But, there is not much we can do id a deadlock situation occurs, beside rebootin
 
 
 
+# Executor framework
+
+```bash
+   
+                                       java.util.concurrent.Executor (Interface)
+                                                         |  
+                                                         |
+                                    java.util.concurrent.ExecutorService (Interface)
+                                                         |
+                        _________________________________|_________________________________ 
+                       |                                                                   |
+                       |                                                                   |  
+        AbstractExecutorService(abstract class)                         ScheduledExecutorService(Interface)
+                       |
+         ______________|_______________
+        |                              |
+        |                              |
+ThreadPoolExecutor                ForkJoinPool
+   (Class)                     (Class, since 1.7) 
+        |
+        |
+ScheduledThreadPoolExecutor
+(also implements ScheduledExecutorService)
+```
+
+```java
+public interface ExecutorService extends Executor {}
+public abstract class AbstractExecutorService implements ExecutorService {} 
+public interface ScheduledExecutorService extends ExecutorService {}
+public class ThreadPoolExecutor extends AbstractExecutorService {}
+public class ForkJoinPool extends AbstractExecutorService {}
+public class ScheduledThreadPoolExecutor extends ThreadPoolExecutor implements ScheduledExecutorService{} 
+
+Factory class to get above implementations:
+public class java.util.concurrent.Executors
+```
 
 
 
@@ -185,10 +249,7 @@ But, there is not much we can do id a deadlock situation occurs, beside rebootin
 
 
 
-
-
-
-Spring equivalent
+# Spring equivalents
 
 |Java                                             | Spring                                     |
 |-------                                          |--------                                    |
@@ -205,9 +266,14 @@ For further reference, please consider the following sections:
 
 **Srping **
 - https://dzone.com/articles/schedulers-in-java-and-spring
+- https://www.baeldung.com/spring-task-scheduler
+- https://www.baeldung.com/java-threadpooltaskexecutor-core-vs-max-poolsize
+- https://stackoverflow.com/questions/17659510/core-pool-size-vs-maximum-pool-size-in-threadpoolexecutor
+- http://www.bigsoft.co.uk/blog/2009/11/27/rules-of-a-threadpoolexecutor-pool-size
 
 **Spring Boot:**  
 * [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
 * [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/)
 * [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/#build-image)
 
+- https://www.netjstech.com/2017/08/java-lambda-expressions-interview-questions.html
