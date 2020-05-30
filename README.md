@@ -176,7 +176,7 @@ public class Person {
 
 **Synchronizing more than one method**
 a. Single instance scenario  
-![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/synchronization-instance-level-lock-eg1.png "Single Instance scenario")
+![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/synchronization-instance-level-lock-eg1.png "Single Instance scenario")
 
 b. In case of 2 instances  
 ![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/synchronization-instance-level-lock-eg2.png "Two instance objects scenario")
