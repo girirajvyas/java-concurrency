@@ -7,7 +7,7 @@
 - Ordering read and write operations on a multicore CPUs
 - Implementing a Thread safe singleton on a multicore CPUs
 
-## Understanding concurrency, Threading and synchronization
+## Understanding Concurrency, Threading and Synchronization
 
 ### Introduction
 
@@ -34,14 +34,18 @@
 - On a CPU timeline a slice will be devoted to do a task.
 
 **What is happening at CPU level?**  
+
+```
 `1st case:` CPU with one core only (it can do only one task at a time)  
 (write)|(check)|(write)|(check)|(print)|(mails)  
 ---------------------------------------------------------> core 1  
 0ms                                            10ms  
+```
 
 **why do we have feeling that everything is happening at the same time?**  
 Because things are happening very fast (All above tasks are completed within a span of 0 to 10 milliseconds which is very less)  
 
+```
 `2nd case:` CPU with multiple cores  
 
 (write)|(write)|(mail)|  
@@ -49,6 +53,7 @@ Because things are happening very fast (All above tasks are completed within a s
 
 (check)|(check)|(print)  
 ---------------------------------------------------------> core 2  
+```
 
 Only on a multicore CPU, things are happening at a same time  
 
@@ -104,30 +109,51 @@ When the process starts, lets assume t1 starts processing and t2 is waiting for 
 |                                  | `Thread scheduler pauses t2`             |
 | Creates an instance of Singleton |                                          |
 
+Image:   
+![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/before-synchronization.png "Before Synchronization")
+
+
 **How to Prevent?**  
 via Synchronization  
 
 > Synchronization prevents a block of code to be executed by more than one thread at the same time
 
 How does synchronization works under the hood?  
-- for any thread to get inside a method marked synchronized, it has to acquire key from a lock object
+- For any thread to get inside a method marked synchronized, it has to acquire key from a lock object
 - Thread t1 comes and want to execute the method, it acquires the key to that lock and processes
 - Tread t2 also comes and ask for the key, as key is already with the t1, thread t2 has to wait
 - Thread t1 returns the key after the processing
 - Now, Thread t2 can process, hence, making sure only one thread accessing the method at a time
 
-**What is Lock Object**   
+> java uses a special object as lock object, that has a key. In Fact, Every object in java language has this key that is used for synchronization
+Image:  
+![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/after-synchronization.png "After Synchronization")
+
+**Understanding the Lock Object or Identifying key object**   
 - So, For synchronization to work,  we need a special, technical object that will hold the key.
 - In fact, every java object can play this role.
 - This key is also called a monitor
-- how can we designate this object? 
+- how can we designate this object? So there are ways as defined below
 
 
-1. Synchronized used in a static method (public static synchronized SingletonWithRaceCondition getInstance())
+1. Synchronized used in a static method  
+```java
+public static SingletonWithRaceCondition getInstance() {
+    if (instance == null) {
+      instance = new SingletonWithRaceCondition();
+    }
+    return instance;
+}
+```
 - In this code, key is the Singleton class itself
-- A synchronized `static method` uses the `class` as a synchronization object
+- **A synchronized `static method` uses the `class` as a synchronization object**
 
 2. Synchronized used in a non-static method (public synchronized String getName())
+```
+    public synchronized String getName() {
+       return this.name;
+    }
+```
 - In this code, key is the instance of the class
 - A synchronized `non-static method` uses the `instance` as a synchronization object. 
  
@@ -148,15 +174,24 @@ public class Person {
 
 ### Synchronization use cases
 
-1. Synchronizing more than one method
+**Synchronizing more than one method**
+a. Single instance scenario  
+![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/synchronization-instance-level-lock-eg1.png "Single Instance scenario")
 
+b. In case of 2 instances  
+![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/synchronization-instance-level-lock-eg2.png "Two instance objects scenario")
 
-**Note:** Synchronized keyword on a method, uses and implicit lock object, which is class object in case of static method and instance of a class in case of a non-static method.    
+c. Class level scenario  
+![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/synchronization-class-level-lock-eg.png "Class level scenario")
+
+**Note:** Using `synchronized` keyword on a method, uses and implicit lock object, which is:  
+- class object in case of static method and  
+- instance of a class in case of a non-static method.  
 
 ### Reentrant locks and Deadlocks
 
 **Locks:**  
-- Locks are reentrant: When a thread holds a lock, it can enter a block synchronized on the lock it is holding.
+> Locks are reentrant: When a thread holds a lock, it can enter a block synchronized on the lock it is holding.
 
 
 # Lock Hierarchy
@@ -201,22 +236,25 @@ But, there is not much we can do id a deadlock situation occurs, beside rebootin
 - Then call the start() method of this Thread Object.
 
 
-
-
-
-
 # Executor framework
 
 ```bash
    
                                        java.util.concurrent.Executor (Interface)
+                                            void execute(Runnable command);
                                                          |  
                                                          |
-                                    java.util.concurrent.ExecutorService (Interface)
-                                                         |
-                        _________________________________|_________________________________ 
-                       |                                                                   |
-                       |                                                                   |  
+                                    java.util.concurrent.ExecutorService (Interface)---->Executors(factory)
+                                                    void shutdown();                             ^
+                                         List<Runnable> shutdownNow();                           |
+                                         <T> Future<T> submit(Callable<T> task);                 |
+                                         <T> Future<T> submit(Runnable task, T result);          |
+                                         Future<?> submit(Runnable task);                        |
+                          <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) |
+                                                         |                                       |
+                        _________________________________|_________________________________      |
+                       |                                                                   |     | 
+                       |                                                                   |     |
         AbstractExecutorService(abstract class)                         ScheduledExecutorService(Interface)
                        |
          ______________|_______________
@@ -237,9 +275,43 @@ public interface ScheduledExecutorService extends ExecutorService {}
 public class ThreadPoolExecutor extends AbstractExecutorService {}
 public class ForkJoinPool extends AbstractExecutorService {}
 public class ScheduledThreadPoolExecutor extends ThreadPoolExecutor implements ScheduledExecutorService{} 
+```
 
-Factory class to get above implementations:
+**Factory class to get above implementations:**  
+```java
 public class java.util.concurrent.Executors
+```
+
+
+# Spring version of Executor framework
+```bash
+                                       java.util.concurrent.Executor (Interface)
+                                            void execute(Runnable command);
+                                                         |
+                                                         |
+                                 org.springframework.core.task.TaskExecutor (Interface)
+                                            @Override
+                                            void execute(Runnable command);
+                                                         |
+                                                         |
+                                 org.springframework.core.task.AsyncTaskExecutor (Interface)
+                                   void execute(Runnable task, long startTimeout);
+                                         Future<?> submit(Runnable task);
+                                         <T> Future<T> submit(Callable<T> task);
+                                                         |
+                        _________________________________|_________________________________
+                       |                                                                   |
+                       |                                                                   |
+           AsyncListenableTaskExecutor (Interface)                         SchedulingTaskExecutor(Interface)
+        ListenableFuture<?> submitListenable(Runnable task);         default boolean prefersShortLivedTasks() {
+        <T> ListenableFuture<T> submitListenable(Callable<T> task);           return true; }
+```
+
+```java
+public interface TaskExecutor extends Executor
+public interface AsyncTaskExecutor extends TaskExecutor
+public interface AsyncListenableTaskExecutor extends AsyncTaskExecutor
+public interface SchedulingTaskExecutor extends AsyncTaskExecutor
 ```
 
 
@@ -247,9 +319,6 @@ public class java.util.concurrent.Executors
 
 
 
-
-
-# Spring equivalents
 
 |Java                                             | Spring                                     |
 |-------                                          |--------                                    |
@@ -260,11 +329,13 @@ public class java.util.concurrent.Executors
 ### Reference Documentation
 For further reference, please consider the following sections:
 
+
 **Concurrency**
+- https://app.pluralsight.com/library/courses/java-patterns-concurrency-multi-threading
 - https://www.javaworld.com/article/2074217/java-101--understanding-java-threads--part-1--introducing-threads-and-runnables.html
 
 
-**Srping **
+**Spring **
 - https://dzone.com/articles/schedulers-in-java-and-spring
 - https://www.baeldung.com/spring-task-scheduler
 - https://www.baeldung.com/java-threadpooltaskexecutor-core-vs-max-poolsize
