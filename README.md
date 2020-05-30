@@ -110,7 +110,7 @@ When the process starts, lets assume t1 starts processing and t2 is waiting for 
 | Creates an instance of Singleton |                                          |
 
 Image:   
-![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/before-synchronization.png "Before Synchronization")
+![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/before-synchronization.png "Before Synchronization")
 
 
 **How to Prevent?**  
@@ -127,7 +127,7 @@ How does synchronization works under the hood?
 
 > java uses a special object as lock object, that has a key. In Fact, Every object in java language has this key that is used for synchronization
 Image:  
-![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/after-synchronization.png "After Synchronization")
+![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/after-synchronization.png "After Synchronization")
 
 **Understanding the Lock Object or Identifying key object**   
 - So, For synchronization to work,  we need a special, technical object that will hold the key.
@@ -174,15 +174,13 @@ public class Person {
 
 ### Synchronization use cases
 
-**Synchronizing more than one method**
-a. Single instance scenario  
+**Synchronizing more than one method**  
+
 ![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/synchronization-instance-level-lock-eg1.png "Single Instance scenario")
 
-b. In case of 2 instances  
-![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/synchronization-instance-level-lock-eg2.png "Two instance objects scenario")
+![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/synchronization-instance-level-lock-eg2.png "Two instance objects scenario")
 
-c. Class level scenario  
-![alt text](https://github.com/girirajvyas/java-concurrency/tree/master/src/test/resources/images/synchronization-class-level-lock-eg.png "Class level scenario")
+![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/synchronization-class-level-lock-eg.png "Class level scenario")
 
 **Note:** Using `synchronized` keyword on a method, uses and implicit lock object, which is:  
 - class object in case of static method and  
