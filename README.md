@@ -3,7 +3,7 @@
 ## Agenda
 
 - Understanding concurrency, Threading and synchronization
-- Implement the Producer/Consumer pattern using wait notify
+- Implementing the Producer/Consumer pattern using wait/notify
 - Ordering read and write operations on a multicore CPUs
 - Implementing a Thread safe singleton on a multicore CPUs
 
@@ -36,7 +36,7 @@
 **What is happening at CPU level?**  
 
 ```
-`1st case:` CPU with one core only (it can do only one task at a time)  
+1st case: CPU with one core only (it can do only one task at a time)  
 (write)|(check)|(write)|(check)|(print)|(mails)  
 ---------------------------------------------------------> core 1  
 0ms                                            10ms  
@@ -46,7 +46,7 @@
 Because things are happening very fast (All above tasks are completed within a span of 0 to 10 milliseconds which is very less)  
 
 ```
-`2nd case:` CPU with multiple cores  
+2nd case: CPU with multiple cores  
 
 (write)|(write)|(mail)|  
 ---------------------------------------------------------> core 1  
@@ -109,7 +109,7 @@ When the process starts, lets assume t1 starts processing and t2 is waiting for 
 |                                  | `Thread scheduler pauses t2`             |
 | Creates an instance of Singleton |                                          |
 
-Image:   
+
 ![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/before-synchronization.png "Before Synchronization")
 
 
@@ -118,16 +118,19 @@ via Synchronization
 
 > Synchronization prevents a block of code to be executed by more than one thread at the same time
 
+![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/after-synchronization.png "After Synchronization")
+
 How does synchronization works under the hood?  
 - For any thread to get inside a method marked synchronized, it has to acquire key from a lock object
-- Thread t1 comes and want to execute the method, it acquires the key to that lock and processes
-- Tread t2 also comes and ask for the key, as key is already with the t1, thread t2 has to wait
-- Thread t1 returns the key after the processing
-- Now, Thread t2 can process, hence, making sure only one thread accessing the method at a time
+- Thread Red comes and want to execute the method, it acquires the key to that lock and processes
+- Thread Blue also comes and ask for the key, as key is already with the t1, thread t2 has to wait
+- Thread Red returns the key after the processing
+- Now, Thread Blue can process, hence, making sure only one thread accessing the method at a time
+
 
 > java uses a special object as lock object, that has a key. In Fact, Every object in java language has this key that is used for synchronization
-Image:  
-![alt text](https://github.com/girirajvyas/java-concurrency/raw/master/src/test/resources/images/after-synchronization.png "After Synchronization")
+
+
 
 **Understanding the Lock Object or Identifying key object**   
 - So, For synchronization to work,  we need a special, technical object that will hold the key.
@@ -186,12 +189,6 @@ public class Person {
 - class object in case of static method and  
 - instance of a class in case of a non-static method.  
 
-### Reentrant locks and Deadlocks
-
-**Locks:**  
-> Locks are reentrant: When a thread holds a lock, it can enter a block synchronized on the lock it is holding.
-
-
 # Lock Hierarchy
 
 ```bash
@@ -215,23 +212,237 @@ public class StampedLock implements java.io.Serializable {(Java 8)
 }
 ```
 
+### Reentrant locks and Deadlocks
 
+**Locks:**  
+> Locks are reentrant: When a thread holds a lock, it can enter a block synchronized on the lock it is holding.
 
 **Deadlock:**  
-A deadlock is a situation where a thread T1 holds a key needed by a Thread T2
+A deadlock is a situation where a thread T1 holds a key needed by a Thread T2  
                                      and T2 holds a key needed by  T1
-
-
 
 >JVM is able to detect deadlock situations and can log information to help debug the application.
 But, there is not much we can do id a deadlock situation occurs, beside rebooting the JVM.
 
-### Runnable patterns
+### Runnable pattern
 
 - The most basic way to create a thread in java is to use the Runnable Pattern
 - First creat an instance of Runnable
 - Then pass it to the constructor of thread class
-- Then call the start() method of this Thread Object.
+- Then call the `start()` method of this Thread Object.
+
+### Code examples
+- Basics
+```java
+public class FirstRunnableExample {
+
+  public static void main(String[] args) {
+    Runnable runnable = () -> {
+      System.out.println("I am running in: " + Thread.currentThread().getName());
+    };
+
+    Thread t = new Thread(runnable);
+    t.setName("My custom name");
+    t.start(); // Output: I am running in: My custom name
+    // t.run(); //AVOID!!! Output: I am running in: main
+  }
+}
+```
+- Solving Race condition with Synchronization
+```java
+public class LongWrapper {
+  private long value;
+
+  public LongWrapper(long value) {
+    this.value = value;
+  }
+
+  public long getValue() {
+    return value;
+  }
+
+  public void incrementValue() {
+    value = value + 1;
+  }
+
+  public synchronized void synchronizedIncrementValue() {
+    value = value + 1;
+  }
+}
+
+public class RaceConditionDemo {
+
+  public static void main(String[] args) throws InterruptedException {
+    // singleThreadExecution();// Works fine as single thread
+    multiThreadExecution();// random output
+    multiThreadExecutionWithSynchronization();// correct output
+  }
+
+  public static void singleThreadExecution() throws InterruptedException {
+    LongWrapper longWrapper = new LongWrapper(0L);
+
+    Runnable runnable = () -> {
+      for (int i = 0; i < 1_000; i++) {
+        longWrapper.incrementValue();
+      }
+    };
+
+    Thread thread = new Thread(runnable);
+    thread.start();
+    thread.join(); // makes sure all threads are executed
+    System.out.println("Value is: " + longWrapper.getValue());
+  }
+
+  public static void multiThreadExecution() throws InterruptedException {
+    LongWrapper longWrapper = new LongWrapper(0L);
+
+    Runnable runnable = () -> {
+      for (int i = 0; i < 1_000; i++) {
+        longWrapper.incrementValue();
+      }
+    };
+
+    Thread[] threads = new Thread[1000];
+    for (int i = 0; i < threads.length; i++) {
+      threads[i] = new Thread(runnable);
+      threads[i].start();
+    }
+
+    for (int i = 0; i < threads.length; i++) {
+      threads[i].join();
+    }
+
+    System.out.println("Value is: " + longWrapper.getValue());
+  }
+
+  public static void multiThreadExecutionWithSynchronization() throws InterruptedException {
+    LongWrapper longWrapper = new LongWrapper(0L);
+
+    Runnable runnable = () -> {
+      for (int i = 0; i < 1_000; i++) {
+        longWrapper.synchronizedIncrementValue();
+      }
+    };
+
+    Thread[] threads = new Thread[1000];
+    for (int i = 0; i < threads.length; i++) {
+      threads[i] = new Thread(runnable);
+      threads[i].start();
+    }
+
+    for (int i = 0; i < threads.length; i++) {
+      threads[i].join();
+    }
+
+    System.out.println("Value is: " + longWrapper.getValue());
+  }
+}
+```
+
+- Deadlock
+```
+public class Deadlock {
+
+  private Object key1 = new Object();
+  private Object key2 = new Object();
+
+  public void a() {
+    synchronized (key1) {
+      System.out.println("[ " + Thread.currentThread().getName() + " ] I am in a()");
+      b();
+    }
+  }
+
+  public void b() {
+    synchronized (key2) {
+      System.out.println("[ " + Thread.currentThread().getName() + " ] I am in b()");
+      c();
+    }
+  }
+
+  public void c() {
+    synchronized (key1) {
+      System.out.println("[ " + Thread.currentThread().getName() + " ] I am in c()");
+    }
+  }
+}
+
+public class DeadlockDemo {
+
+  public static void main(String[] args) throws InterruptedException {
+    Deadlock deadlock = new Deadlock();
+
+    Runnable r1 = () -> deadlock.a();
+    Runnable r2 = () -> deadlock.b();
+
+    Thread t1 = new Thread(r1);
+    Thread t2 = new Thread(r2);
+
+    t1.start();
+    t2.start();
+
+    t1.join();
+    t2.join();
+
+  }
+}
+```
+
+### Summary
+
+- A thread executes task in a special context. In java thread is modelled by an object, instance of thread class and task is modelled by an instance of a runnable interface.
+- Race condition and how to use synchronization to avoid the Race condition
+- Reentrantlocks and deadlocks
+
+## Implementing the Producer/Consumer pattern using wait/notify
+
+### Agenda
+
+- The Runnable pattern
+- What is the Producer/Consumer pattern
+- How to implement it using synchronization and the wait/notify pattern
+
+### The Runnable Pattern
+
+**Introduction**  
+
+- This is the first pattern used to launch threads in java
+- Introduced in Java 1.0
+- Other patterns have been introduced in Java 5 (java.util.concurrent API)
+
+**How to launch a new Thread**  
+
+- A thread executes a Task, In Java 1, the model for a task is the Runtime Interface.
+- Runnable has only one method run(). Hence it is a FunctionalInterface from java 8
+
+Steps:  
+- Create an instance of Runnable
+- Create an instance of Thread with task as parameter
+- Launch the thread
+- COMMON MISTAKE: Do not call the run() method instead of start() method.
+- Knowing in which thread a task is executed, you can use `Thread.currentthread()` static method returns the current thread
+    ```java
+    Runnable task = () -> System.out.println("Hello World..!");
+    Thread thread = new Thread(task);
+    thread.start();
+    thread.run(); // NEVER do this, if you do this, the task will be executed, but in the current thread
+    ```
+
+**How to Stop a Thread**  
+
+- It is more tricky then it seems
+- There is a method in the Thread class called `stop()`
+- This method should not be used
+- It is there for legacy, backward compatibility reasons
+- The right pattern is to use the `interrupt()` method
+- The call to `interrupt()` causes the `isInterrupted()` method to return true
+- If the thread is blocked, or waiting then the corresponding method will throw an InterruptedException
+- The methods `wait()/notify()`, `join()` throw InterruptedException
+
+**What is a Producer/Consumer**
+
+- 
+
 
 
 # Executor framework
@@ -282,6 +493,7 @@ public class java.util.concurrent.Executors
 
 
 # Spring version of Executor framework
+
 ```bash
                                        java.util.concurrent.Executor (Interface)
                                             void execute(Runnable command);
