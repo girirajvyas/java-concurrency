@@ -410,11 +410,18 @@ public class DeadlockDemo {
 - Introduced in Java 1.0
 - Other patterns have been introduced in Java 5 (java.util.concurrent API)
 
-**How to launch a new Thread**  
+**How to launch a task in new Thread**  
 
 - A thread executes a Task, In Java 1, the model for a task is the Runtime Interface.
 - Runnable has only one method run(). Hence it is a FunctionalInterface from java 8
 
+```java
+@FunctionalInterface
+public interface Runnable {
+    void run();
+}
+
+```
 Steps:  
 - Create an instance of Runnable
 - Create an instance of Thread with task as parameter
@@ -439,9 +446,61 @@ Steps:
 - If the thread is blocked, or waiting then the corresponding method will throw an InterruptedException
 - The methods `wait()/notify()`, `join()` throw InterruptedException
 
+```
+Thread t1 = ...
+t1.interrupt(); // causes the `isInterrupted()` method to return true
+
+
+Runnable task = () -> {
+   while(!Thread.currentThread().isInterrupted()) { 
+     // Always check isInterrupted before executing the task
+     // task 
+   }
+}
+
+```
+
+
 **What is a Producer/Consumer**
 
-- 
+- A producer produces values in buffer
+- A consumer consumes values from this buffer
+- Be careful: the buffer can be empty or full
+- Producers and Consumers are run in their own thread
+
+Simple Producer
+
+```java
+int count = 0;
+int[] buffer = new int[BUFFER_SIZE];
+
+class Producer {
+    public void produce() {
+        while(isFull(buffer)) {
+            buffer[count++] = 1;
+        }
+    } 
+}
+```
+
+Simple Consumer
+
+```java
+int count = 0;
+int[] buffer = new int[BUFFER_SIZE];
+
+class Consumer {
+    public void consume() {
+        while(isEmpty(buffer)) {
+            buffer[--count] = 0;
+        }
+    } 
+}
+```
+
+
+
+
 
 
 
@@ -545,7 +604,7 @@ For further reference, please consider the following sections:
 - https://www.javaworld.com/article/2074217/java-101--understanding-java-threads--part-1--introducing-threads-and-runnables.html
 
 
-**Spring **
+**Spring**
 - https://dzone.com/articles/schedulers-in-java-and-spring
 - https://www.baeldung.com/spring-task-scheduler
 - https://www.baeldung.com/java-threadpooltaskexecutor-core-vs-max-poolsize
@@ -553,8 +612,5 @@ For further reference, please consider the following sections:
 - http://www.bigsoft.co.uk/blog/2009/11/27/rules-of-a-threadpoolexecutor-pool-size
 
 **Spring Boot:**  
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/#build-image)
-
-- https://www.netjstech.com/2017/08/java-lambda-expressions-interview-questions.html
+- [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/)
+- [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/#build-image)
