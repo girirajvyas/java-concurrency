@@ -602,6 +602,7 @@ For further reference, please consider the following sections:
 **Concurrency**
 - https://app.pluralsight.com/library/courses/java-patterns-concurrency-multi-threading
 - https://www.javaworld.com/article/2074217/java-101--understanding-java-threads--part-1--introducing-threads-and-runnables.html
+- https://dzone.com/articles/java-concurrency-evolution
 
 
 **Spring**
