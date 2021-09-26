@@ -1,13 +1,17 @@
 # java concurrency
 
-## Agenda
+## Table of contents
 
-- Understanding concurrency, Threading and synchronization
-- Implementing the Producer/Consumer pattern using wait/notify
-- Ordering read and write operations on a multicore CPUs
-- Implementing a Thread safe singleton on a multicore CPUs
+- Basics
+  - A. Understanding concurrency, Threading and synchronization
+    - Introduction
+    - Threads
+    - At the same time meaning
+  - B. Implementing the Producer/Consumer pattern using wait/notify
+  - C. Ordering read and write operations on a multicore CPUs
+  - D. Implementing a Thread safe singleton on a multicore CPUs
 
-## Understanding Concurrency, Threading and Synchronization
+## A. Understanding Concurrency, Threading and Synchronization
 
 ### Introduction
 
@@ -499,11 +503,6 @@ class Consumer {
 ```
 
 
-
-
-
-
-
 # Executor framework
 
 ```bash
@@ -583,16 +582,18 @@ public interface AsyncListenableTaskExecutor extends AsyncTaskExecutor
 public interface SchedulingTaskExecutor extends AsyncTaskExecutor
 ```
 
-
-
-
-
-
-
 |Java                                             | Spring                                     |
 |-------                                          |--------                                    |
 |java.util.concurrent.ScheduledExecutorService    |org.springframework.scheduling.TaskScheduler|
 |java.util.TimerTask                              | NA (above can be used)                     |
+
+### Topics to explore
+ - countdownlatch, cyclic barrier, threadlocal
+ - bounded vs unbounded queue
+ - advantages of Lock
+ - odd/even numbers from different treads (learn inter thread communication)
+   - https://www.baeldung.com/java-even-odd-numbers-with-2-threads
+   - https://www.geeksforgeeks.org/print-even-and-odd-numbers-in-increasing-order-using-two-threads-in-java/
 
 
 ### Reference Documentation
